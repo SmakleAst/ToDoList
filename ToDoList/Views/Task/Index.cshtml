@@ -1,0 +1,35 @@
+﻿@using ToDoList.Domain.Enum;
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+
+<h4 class="d-flex justify-content-between align-items-center mb-3">
+    <span class="text-muted">Дела на сегодня</span>
+    <span class="badge badge-secondary badge-pill text-muted" id="countOfTasks"></span>
+</h4>
+<form class="form-inline" id="createTaskForm">
+    <input name="taskDescription" placeholder="Задача..." type="text" />
+    <select name="priority" asp-items="Html.GetEnumSelectList<Priority>()"></select>
+    <button id="createTask" class="btn button-primary">Создать</button>
+</form>
+<ul class="list-group mb-3" id="tasksList"></ul>
+<form>
+    <div class="card col-md-12">
+        <button type="submit" class="btn btn-secondary">Закончить день</button>
+    </div>
+</form>
+<br />
+
+@section Scripts
+{
+    <script>
+        $('#createTask').on('click', function (){
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("Create", "Task")',
+                data: $('#createTaskForm').serialize()
+            })
+        });
+    </script>
+}
