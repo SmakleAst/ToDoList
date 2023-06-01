@@ -22,12 +22,88 @@
         <button type="submit" class="btn btn-secondary">Закончить день</button>
     </div>
 </form>
+
 <br />
+<div class="row">
+    <div class="form-group col-md-6">
+        <label class="cpl-form-label">Описание</label>
+        <input name="descriptionTask" type="text" class="form-control"/>
+    </div>
+    <div class="form-group col-md-6">
+        <label class="col-form-label">Приоритет</label>
+        <select id="prioritySearch" class="form-control mb-3" asp-items="Html.GetEnumSelectList<Priority>()"></select>
+    </div>
+</div>
+<br />
+
+<table class="table table-dark table-hover" id="taskTableId">
+    <thead>
+        <tr>
+            <th>Сложность</th>
+            <th>Описание</th>
+            <th>Готовность</th>
+            <th>Действие</th>
+        </tr>
+    </thead>
+    <tbody>
+
+    </tbody>
+</table>
 
 @section Scripts
 {
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
     <script>
+
+        let dataTable = $('#taskTableId').DataTable({
+            info: true,
+            serverSide: true,
+            searching: false,
+            paging: false,
+            sorting: false,
+            ajax: {
+                url: "@Url.Action("TaskHandler")",
+                method: 'POST',
+                data: model
+            },
+            columns: [
+                {data: 'priority'},
+                {data: 'description'},
+                {data: 'isCompleted'},
+                {
+                    data: null,
+                    sortable: false,
+                    render: function (data, type) {
+                        return '<button class="btn btn-success btn-sm center-block">Выполнить</button>'
+                    }
+                }
+            ],
+            createdRow: function (nRow, data) {
+                for (var i = 0; i < dataTable.columns().header().length - 1; i++) {
+                    $('td', nRow).eq(i).css('cursor', 'pointer');
+
+                    $('td', nRow).eq(i).on('click', null);
+                }
+                $('td button', nRow).eq(i).on('click', null);
+            }
+        });
+
+        function model() {
+            return {
+                Description: $('input[name="descriptionTask"]').val(),
+                Priority: $('#prioritySearch option:selected').val(),
+            }
+        }
+
+        $('input[name="descriptionTask"]').on('change', function () {
+            dataTable.draw();
+        })
+
+        $('#prioritySearch').on('change', function () {
+            dataTable.draw();
+        })
 
         $('#createTask').on('click', function (e){
             e.preventDefault();
