@@ -8,10 +8,13 @@
     <span class="text-muted">Дела на сегодня</span>
     <span class="badge badge-secondary badge-pill text-muted" id="countOfTasks"></span>
 </h4>
-<form class="form-inline" id="createTaskForm">
-    <input name="taskDescription" placeholder="Задача..." type="text" />
-    <select name="priority" asp-items="Html.GetEnumSelectList<Priority>()"></select>
-    <button id="createTask" class="btn button-primary">Создать</button>
+<form id="createTaskForm">
+    <div>
+        <input name="description" class="form-inline" placeholder="Задача..." type="text" />
+        <select name="priority" asp-items="Html.GetEnumSelectList<Priority>()" class="form-inline mb-3"></select>
+    </div>
+    <button id="createTask" class="btn btn-primary">Создать</button>
+    @*<input type="submit" />*@
 </form>
 <ul class="list-group mb-3" id="tasksList"></ul>
 <form>
@@ -23,13 +26,65 @@
 
 @section Scripts
 {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        $('#createTask').on('click', function (){
+
+        $('#createTask').on('click', function (e){
+            e.preventDefault();
             $.ajax({
                 type: 'POST',
                 url: '@Url.Action("Create", "Task")',
-                data: $('#createTaskForm').serialize()
+                data: $('#createTaskForm').serialize(),
+                success: function (response) {
+                    Swal.fire({
+                        title: 'Информация',
+                        text: response.description,
+                        icon: 'success',
+                        confimButtonText: 'Ok'
+                    })
+                },
+                error: function (response) {
+                    Swal.fire({
+                        title: 'Информация',
+                        text: response.responseJSON.description,
+                        icon: 'error',
+                        confimButtonText: 'Ok'
+                    })
+                }
             })
         });
+
+        //$(function () {
+        //    $('form').each(function () {
+        //        $(this).find('input').keypress(function (e) {
+        //            if (e.which == 10 || e.which == 13) {
+        //                this.form.submit();
+        //                $.ajax({
+        //                    type: 'POST',
+        //                    url: '@Url.Action("Create", "Task")',
+        //                    data: $('#createTaskForm').serialize(),
+        //                    success: function (response) {
+        //                        Swal.fire({
+        //                            title: 'Информация',
+        //                            text: response.description,
+        //                            icon: 'success',
+        //                            confimButtonText: 'Ok'
+        //                        })
+        //                    },
+        //                    error: function (response) {
+        //                        Swal.fire({}
+        //                            title: 'Информация',
+        //                            text: response.responseJson.description,
+        //                            icon: 'error',
+        //                            confimButtonText: 'Ok'
+        //                        })
+        //                    }
+        //                })
+        //            }
+        //        });
+
+        //        $(this).find('input[type=submit]').hide();
+        //    });
+        //});
     </script>
 }

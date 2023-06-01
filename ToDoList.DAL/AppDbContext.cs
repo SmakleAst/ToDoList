@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using ToDoList.Domain.Entity;
 
 namespace ToDoList.DAL
 {
@@ -8,5 +9,7 @@ namespace ToDoList.DAL
         {
             Database.EnsureCreated();
         }
+
+        public DbSet<TaskEntity> Tasks { get; set; }
     }
 }
