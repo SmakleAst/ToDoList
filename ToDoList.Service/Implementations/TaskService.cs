@@ -21,6 +21,8 @@ namespace ToDoList.Service.Implementations
         {
             try
             {
+                model.Validate();
+
                 _logger.LogInformation($"Запрос на создание задачи - {model.Description}");
 
                 var task = await _taskRepository.GetAll()
@@ -58,6 +60,7 @@ namespace ToDoList.Service.Implementations
                 _logger.LogError(exception, $"[TaskService.Create]: {exception.Message}");
                 return new BaseResponse<TaskEntity>
                 {
+                    Description = $"{exception.Message}",
                     StatusCode = StatusCode.InternalServerError
                 };
             }
