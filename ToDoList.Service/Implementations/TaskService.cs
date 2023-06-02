@@ -68,11 +68,10 @@ namespace ToDoList.Service.Implementations
             }
         }
 
-        public async Task<IBaseResponse<bool>> EndTask(long id)
+        public async Task<IBaseResponse<bool>> ChangeTaskCompleteStatus(long id, string isCompleted)
         {
             try
             {
-                _logger.LogInformation($"Id задачи на удаление - {id}");
                 var task = await _taskRepository.GetAll().FirstOrDefaultAsync(x => x.Id == id);
                 if (task == null)
                 {
@@ -83,7 +82,7 @@ namespace ToDoList.Service.Implementations
                     };
                 }
 
-                task.IsCompleted = true;
+                task.IsCompleted = isCompleted.Equals("Выполнена") ? false : true;
 
                 await _taskRepository.Update(task);
 
@@ -108,10 +107,7 @@ namespace ToDoList.Service.Implementations
         {
             try
             {
-                
-
                 var tasks = await _taskRepository.GetAll()
-                    .Where(x => x.IsCompleted == false)
                     .WhereIf(!string.IsNullOrWhiteSpace(filter.Description),
                         x => x.Description.Contains(filter.Description))
                     .WhereIf(filter.Priority.HasValue, x => x.Priority == filter.Priority)

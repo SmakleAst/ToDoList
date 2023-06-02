@@ -31,9 +31,9 @@ namespace ToDoList.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> EndTask(long id)
+        public async Task<IActionResult> ChangeTaskCompleteStatus(long id, string isCompleted)
         {
-            var response = await _taskService.EndTask(id);
+            var response = await _taskService.ChangeTaskCompleteStatus(id, isCompleted);
 
             if (response.StatusCode == Domain.Enum.StatusCode.Ok)
             {

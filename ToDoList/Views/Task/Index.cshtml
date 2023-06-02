@@ -12,7 +12,7 @@
         <input name="description" class="form-group col-md-8" placeholder="Задача..." type="text" />
         <select name="priority" asp-items="Html.GetEnumSelectList<Priority>()" class="form-group col-md-3 mb-3"></select>
     </div>
-    <button id="createTask" class="btn btn-primary col-md-12">Создать</button>
+    <button id="createTask" hidden class="btn btn-primary col-md-12">Создать</button>
 </form>
 <ul class="list-group mb-3" id="tasksList"></ul>
 
@@ -38,7 +38,7 @@
             <th>Действие</th>
         </tr>
     </thead>
-</table>
+</table>333333
 
 @section Scripts
 {
@@ -77,7 +77,6 @@
                 }
             ],
             createdRow: function (nRow, data) {
-
                 var handlerComplete = function () {
                     swalWithBootstrapButtons.fire({
                         title: 'Вы уверены?',
@@ -86,10 +85,14 @@
                         reverseButtons: true
                     }).then((result) => {
                         if (result.isConfirmed) {
+                            console.log("%d", data.isCompleted);
                             $.ajax({
                                 type: 'POST',
-                                url: '@Url.Action("EndTask")',
-                                data: { id: data.id },
+                                url: '@Url.Action("ChangeTaskCompleteStatus")',
+                                data: {
+                                    id: data.id,
+                                    isCompleted: data.isCompleted
+                                },
                                 success: function (response) {
                                     Swal.fire({
                                         title: 'Информация',
@@ -159,7 +162,6 @@
                     })
                 }
             })
-            dataTable.draw();
         })
     </script>
 }
