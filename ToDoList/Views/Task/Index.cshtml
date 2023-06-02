@@ -3,35 +3,28 @@
     ViewData["Title"] = "Home Page";
 }
 
-
 <h4 class="d-flex justify-content-between align-items-center mb-3">
     <span class="text-muted">Дела на сегодня</span>
     <span class="badge badge-secondary badge-pill text-muted" id="countOfTasks"></span>
 </h4>
 <form id="createTaskForm">
     <div>
-        <input name="description" class="form-inline" placeholder="Задача..." type="text" />
-        <select name="priority" asp-items="Html.GetEnumSelectList<Priority>()" class="form-inline mb-3"></select>
+        <input name="description" class="form-group col-md-8" placeholder="Задача..." type="text" />
+        <select name="priority" asp-items="Html.GetEnumSelectList<Priority>()" class="form-group col-md-3 mb-3"></select>
     </div>
-    <button id="createTask" class="btn btn-primary">Создать</button>
-    @*<input type="submit" />*@
+    <button id="createTask" class="btn btn-primary col-md-12">Создать</button>
 </form>
 <ul class="list-group mb-3" id="tasksList"></ul>
-<form>
-    <div class="card col-md-12">
-        <button type="submit" class="btn btn-secondary">Закончить день</button>
-    </div>
-</form>
 
 <br />
 <div class="row">
     <div class="form-group col-md-6">
-        <label class="cpl-form-label">Описание</label>
+        <label class="col-form-label">Описание</label>
         <input name="descriptionTask" type="text" class="form-control"/>
     </div>
     <div class="form-group col-md-6">
         <label class="col-form-label">Приоритет</label>
-        <select id="prioritySearch" class="form-control mb-3" asp-items="Html.GetEnumSelectList<Priority>()"></select>
+        <select id="prioritySearch" class="form-control mb-2" asp-items="Html.GetEnumSelectList<Priority>()"></select>
     </div>
 </div>
 <br />
@@ -45,17 +38,20 @@
             <th>Действие</th>
         </tr>
     </thead>
-    <tbody>
-
-    </tbody>
 </table>
 
 @section Scripts
 {
-
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
     <script>
+
+        const swalWithBootstrapButtons = Swal.mixin({
+            customClass: {
+                confirmButton: 'btn btn-success',
+            },
+            buttonsStyling: false
+        })
 
         let dataTable = $('#taskTableId').DataTable({
             info: true,
@@ -64,7 +60,7 @@
             paging: false,
             sorting: false,
             ajax: {
-                url: "@Url.Action("TaskHandler")",
+                url: '@Url.Action("TaskHandler")',
                 method: 'POST',
                 data: model
             },
@@ -81,14 +77,49 @@
                 }
             ],
             createdRow: function (nRow, data) {
+
+                var handlerComplete = function () {
+                    swalWithBootstrapButtons.fire({
+                        title: 'Вы уверены?',
+                        icon: 'warning',
+                        confirmButtonText: 'Да',
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                type: 'POST',
+                                url: '@Url.Action("EndTask")',
+                                data: { id: data.id },
+                                success: function (response) {
+                                    Swal.fire({
+                                        title: 'Информация',
+                                        text: response.description,
+                                        icon: 'success',
+                                        confimButtonText: 'Ok'
+                                    })
+                                    dataTable.draw();
+                                },
+                                error: function (response) {
+                                    Swal.fire({
+                                        title: 'Информация',
+                                        text: response.responseJSON.description,
+                                        icon: 'error',
+                                        confimButtonText: 'Ok'
+                                    })
+                                }
+                            })
+                        } 
+                    })
+                }
+
                 for (var i = 0; i < dataTable.columns().header().length - 1; i++) {
                     $('td', nRow).eq(i).css('cursor', 'pointer');
 
                     $('td', nRow).eq(i).on('click', null);
                 }
-                $('td button', nRow).eq(i).on('click', null);
+                $('td button', nRow).on('click', handlerComplete);
             }
-        });
+        })
 
         function model() {
             return {
@@ -128,39 +159,7 @@
                     })
                 }
             })
-        });
-
-        //$(function () {
-        //    $('form').each(function () {
-        //        $(this).find('input').keypress(function (e) {
-        //            if (e.which == 10 || e.which == 13) {
-        //                this.form.submit();
-        //                $.ajax({
-        //                    type: 'POST',
-        //                    url: '@Url.Action("Create", "Task")',
-        //                    data: $('#createTaskForm').serialize(),
-        //                    success: function (response) {
-        //                        Swal.fire({
-        //                            title: 'Информация',
-        //                            text: response.description,
-        //                            icon: 'success',
-        //                            confimButtonText: 'Ok'
-        //                        })
-        //                    },
-        //                    error: function (response) {
-        //                        Swal.fire({}
-        //                            title: 'Информация',
-        //                            text: response.responseJson.description,
-        //                            icon: 'error',
-        //                            confimButtonText: 'Ok'
-        //                        })
-        //                    }
-        //                })
-        //            }
-        //        });
-
-        //        $(this).find('input[type=submit]').hide();
-        //    });
-        //});
+            dataTable.draw();
+        })
     </script>
 }

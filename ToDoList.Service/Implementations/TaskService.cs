@@ -16,8 +16,8 @@ namespace ToDoList.Service.Implementations
         private readonly IBaseRepository<TaskEntity> _taskRepository;
         private ILogger<TaskService> _logger;
         
-        public TaskService(IBaseRepository<TaskEntity> taskEntity, ILogger<TaskService> logger) =>
-            (_taskRepository, _logger) = (taskEntity, logger);
+        public TaskService(IBaseRepository<TaskEntity> taskRepository, ILogger<TaskService> logger) =>
+            (_taskRepository, _logger) = (taskRepository, logger);
 
         public async Task<IBaseResponse<TaskEntity>> Create(CreateTaskViewModel model)
         {
@@ -50,7 +50,7 @@ namespace ToDoList.Service.Implementations
 
                 await _taskRepository.Create(task);
 
-                _logger.LogInformation($"Задача создалась: {task.Description} {task.CreatedTime}");
+                _logger.LogInformation($"Задача создалась: {task.Id} {task.CreatedTime}");
                 return new BaseResponse<TaskEntity>()
                 {
                     Description = "Задача создана",
@@ -60,7 +60,43 @@ namespace ToDoList.Service.Implementations
             catch (Exception exception)
             {
                 _logger.LogError(exception, $"[TaskService.Create]: {exception.Message}");
-                return new BaseResponse<TaskEntity>
+                return new BaseResponse<TaskEntity>()
+                {
+                    Description = $"{exception.Message}",
+                    StatusCode = StatusCode.InternalServerError
+                };
+            }
+        }
+
+        public async Task<IBaseResponse<bool>> EndTask(long id)
+        {
+            try
+            {
+                _logger.LogInformation($"Id задачи на удаление - {id}");
+                var task = await _taskRepository.GetAll().FirstOrDefaultAsync(x => x.Id == id);
+                if (task == null)
+                {
+                    return new BaseResponse<bool>()
+                    {
+                        Description = "Задача не найдена",
+                        StatusCode = StatusCode.TaskNotFound
+                    };
+                }
+
+                task.IsCompleted = true;
+
+                await _taskRepository.Update(task);
+
+                return new BaseResponse<bool>()
+                {
+                    Description = "Задача завершена",
+                    StatusCode = StatusCode.Ok
+                };
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, $"[TaskService.Create]: {exception.Message}");
+                return new BaseResponse<bool>()
                 {
                     Description = $"{exception.Message}",
                     StatusCode = StatusCode.InternalServerError
@@ -72,19 +108,22 @@ namespace ToDoList.Service.Implementations
         {
             try
             {
+                
+
                 var tasks = await _taskRepository.GetAll()
+                    .Where(x => x.IsCompleted == false)
                     .WhereIf(!string.IsNullOrWhiteSpace(filter.Description),
                         x => x.Description.Contains(filter.Description))
                     .WhereIf(filter.Priority.HasValue, x => x.Priority == filter.Priority)
                     .Select(x => new TaskViewModel()
                     {
+                        Id = x.Id,
                         Description = x.Description,
                         IsCompleted = x.IsCompleted == true ? "Выполнена" : "Не выполнена",
                         Priority = x.Priority.GetDisplayName(),
                         CreatedTime = x.CreatedTime.ToLongDateString()
                     })
                     .ToListAsync();
-
 
                 return new BaseResponse<IEnumerable<TaskViewModel>>()
                 {
@@ -95,7 +134,7 @@ namespace ToDoList.Service.Implementations
             catch (Exception exception)
             {
                 _logger.LogError(exception, $"[TaskService.Create]: {exception.Message}");
-                return new BaseResponse<IEnumerable<TaskViewModel>>
+                return new BaseResponse<IEnumerable<TaskViewModel>>()
                 {
                     Description = $"{exception.Message}",
                     StatusCode = StatusCode.InternalServerError
